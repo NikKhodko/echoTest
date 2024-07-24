@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 type User struct {
@@ -100,10 +101,22 @@ func getUser(c echo.Context) error {
 	})
 }
 
+func mainAdmin(c echo.Context) error {
+	return c.String(http.StatusOK, "u are on main admin page")
+}
+
 func main() {
 	fmt.Println("welcome to the server")
 
 	e := echo.New()
+
+	g := e.Group("/admin")
+
+	g.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Format: `[${time_rfc3339}]  ${status}  ${method} ${host}${path} ${latency_human}` + "\n",
+	}))
+
+	g.GET("/main", mainAdmin)
 
 	e.GET("/", hola)
 	e.GET("/users/:data", getUser)
