@@ -117,6 +117,8 @@ func main() {
 
 	e := echo.New()
 
+	e.Use(ServerHeader)
+
 	g := e.Group("/admin")
 
 	g.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
