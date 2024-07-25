@@ -27,7 +27,7 @@ type Boss struct {
 }
 
 func hola(c echo.Context) error {
-	return c.String(http.StatusOK, "Hello, gay")
+	return c.String(http.StatusOK, "Hello, friend")
 }
 func addUser(c echo.Context) error {
 	user := User{}
@@ -103,6 +103,13 @@ func getUser(c echo.Context) error {
 
 func mainAdmin(c echo.Context) error {
 	return c.String(http.StatusOK, "u are on main admin page")
+}
+
+func ServerHeader(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		c.Response().Header().Set(echo.HeaderServer, "qwerty")
+		return next(c)
+	}
 }
 
 func main() {
