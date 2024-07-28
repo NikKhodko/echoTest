@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -106,6 +107,33 @@ func mainAdmin(c echo.Context) error {
 	return c.String(http.StatusOK, "u are on main admin page")
 }
 
+func mainCookie(c echo.Context) error {
+	return c.String(http.StatusOK, "you are on the secret cookie page!")
+}
+
+func login(c echo.Context) error {
+	username := c.QueryParam("username")
+	password := c.QueryParam("password")
+
+	// check username and password against DB after hashing the password
+	if username == "nikita" && password == "0909" {
+		cookie := &http.Cookie{}
+
+		// this is the same
+		//cookie := new(http.Cookie)
+
+		cookie.Name = "sessionID"
+		cookie.Value = "some_string"
+		cookie.Expires = time.Now().Add(48 * time.Hour)
+
+		c.SetCookie(cookie)
+
+		return c.String(http.StatusOK, "You were logged in!")
+	}
+
+	return c.String(http.StatusUnauthorized, "Your username or password were wrong")
+}
+
 func ServerHeader(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		c.Response().Header().Set(echo.HeaderServer, "qwerty")
@@ -140,20 +168,25 @@ func main() {
 
 	e.Use(ServerHeader)
 
-	g := e.Group("/admin")
+	adminGroup := e.Group("/admin")
+	cookieGroup := e.Group("/cookie")
 
-	g.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+	adminGroup.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: `[${time_rfc3339}]  ${status}  ${method} ${host}${path} ${latency_human}` + "\n",
 	}))
 
-	g.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
+	adminGroup.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
 		if username == "nikita" && password == "0909" {
 			return true, nil
 		}
 		return false, nil
 	}))
 
-	g.GET("/main", mainAdmin)
+	cookieGroup.Use(checkCookie)
+
+	cookieGroup.GET("/main", mainCookie)
+
+	adminGroup.GET("/main", mainAdmin)
 
 	e.GET("/", hola)
 	e.GET("/users/:data", getUser)
