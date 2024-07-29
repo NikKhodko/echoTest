@@ -195,6 +195,7 @@ func main() {
 
 	adminGroup := e.Group("/admin")
 	cookieGroup := e.Group("/cookie")
+	jwtGroup := e.Group("/jwt")
 
 	adminGroup.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: `[${time_rfc3339}]  ${status}  ${method} ${host}${path} ${latency_human}` + "\n",
@@ -205,6 +206,11 @@ func main() {
 			return true, nil
 		}
 		return false, nil
+	}))
+
+	jwtGroup.Use(middleware.JWTWithConfig(middleware.JWTConfig{
+		SigningMethod: "HS512",
+		SigningKey:    []byte("mySecret"),
 	}))
 
 	cookieGroup.Use(checkCookie)
