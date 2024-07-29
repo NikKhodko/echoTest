@@ -117,6 +117,17 @@ func mainCookie(c echo.Context) error {
 	return c.String(http.StatusOK, "you are on the secret cookie page!")
 }
 
+func mainJwt(c echo.Context) error {
+	user := c.Get("user")
+	token := user.(*jwt.Token)
+
+	claims := token.Claims.(jwt.MapClaims)
+
+	log.Println("User Name: ", claims["name"], "User ID: ", claims["jti"])
+
+	return c.String(http.StatusOK, "you are on the top secret jwt page!")
+}
+
 func login(c echo.Context) error {
 	username := c.QueryParam("username")
 	password := c.QueryParam("password")
@@ -134,9 +145,17 @@ func login(c echo.Context) error {
 
 		c.SetCookie(cookie)
 
-		return c.String(http.StatusOK, "You were logged in!")
-	}
+		token, err := createJwtToken()
+		if err != nil {
+			log.Println("Error Creating JWT token", err)
+			return c.String(http.StatusInternalServerError, "something went wrong")
+		}
 
+		return c.JSON(http.StatusOK, map[string]string{
+			"message": "You were logged in!",
+			"token":   token,
+		})
+	}
 	return c.String(http.StatusUnauthorized, "Your username or password were wrong")
 }
 
@@ -218,6 +237,8 @@ func main() {
 	cookieGroup.GET("/main", mainCookie)
 
 	adminGroup.GET("/main", mainAdmin)
+
+	jwtGroup.GET("/main", mainjwt)
 
 	e.GET("/", hola)
 	e.GET("/users/:data", getUser)
