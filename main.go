@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -26,6 +27,11 @@ type Admin struct {
 type Boss struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
+}
+
+type JwtClaims struct {
+	Name string `json:"name"`
+	jwt.StandardClaims
 }
 
 func hola(c echo.Context) error {
@@ -159,6 +165,25 @@ func checkCookie(next echo.HandlerFunc) echo.HandlerFunc {
 
 		return c.String(http.StatusUnauthorized, "you dont have the right cookie, cookie")
 	}
+}
+
+func createJwtToken() (string, error) {
+	claims := JwtClaims{
+		"jack",
+		jwt.StandardClaims{
+			Id:        "main_user_id",
+			ExpiresAt: time.Now().Add(24 * time.Hour).Unix(),
+		},
+	}
+
+	rawToken := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
+
+	token, err := rawToken.SignedString([]byte("mySecret"))
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
 }
 
 func main() {
