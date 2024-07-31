@@ -216,6 +216,10 @@ func main() {
 	cookieGroup := e.Group("/cookie")
 	jwtGroup := e.Group("/jwt")
 
+	e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+		Root: "../static",
+	}))
+
 	adminGroup.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: `[${time_rfc3339}]  ${status}  ${method} ${host}${path} ${latency_human}` + "\n",
 	}))
